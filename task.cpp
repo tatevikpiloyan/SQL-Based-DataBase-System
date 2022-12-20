@@ -580,10 +580,3 @@ TaskDB::~TaskDB()
     }
     task_ID.clear();
 }
-
-
-// TESTS
-// select task.data all where name = "Do SHEFFs job!", user = piloyan@gmail.com, deadline = 30/12/2022
-// insert task.data name = "Do your task in time"", user = ooo@gmail.com, deadline = 16/01/2023
-// insert task.data name = "Complete TMS project in time", user = esim@gmail.com, deadline = 28/02/2024
-// insert task.data name = "Hello, how are you?", user = ooo@gmail.com, deadline = 12/12/2024
