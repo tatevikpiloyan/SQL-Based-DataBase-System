@@ -588,6 +588,3 @@ TaskDB::~TaskDB()
     task_ID.clear();
 <<<<<<< HEAD
 }
-=======
-}
->>>>>>> c2c353f (Update)
