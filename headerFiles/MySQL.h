@@ -23,6 +23,7 @@ private:
     void select(Connect*, std::vector<std::string>&);
     void update(Connect*, std::vector<std::string>&);
     void delete_(Connect*, std::vector<std::string>&);
+    void modify(Connect*, std::vector<std::string>&);
 
 private:
     using Func_Point = void (MySQL::*)(Connect*, std::vector<std::string>&);

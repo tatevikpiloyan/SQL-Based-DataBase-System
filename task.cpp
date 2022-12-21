@@ -545,6 +545,13 @@ std::size_t TaskDB::find_ID(const std::string& rhs)
 }
 
 
+// Inherited modify function
+void TaskDB::modify(std::vector<std::string>&)
+{
+    throw std::invalid_argument("Syntax error!");
+}
+
+
 // Move user data to file
 void TaskDB::to_file()
 {
@@ -579,4 +586,8 @@ TaskDB::~TaskDB()
         delete it.second;
     }
     task_ID.clear();
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> c2c353f (Update)

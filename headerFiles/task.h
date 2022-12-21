@@ -29,6 +29,7 @@ public:
     virtual void select(std::vector<std::string>&) override;
     virtual void delete_(std::vector<std::string>&) override;
     virtual void update(std::vector<std::string>&) override;
+    virtual void modify(std::vector<std::string>&) override;
     virtual void to_file() override;
     std::size_t find_ID(const std::string&);
 

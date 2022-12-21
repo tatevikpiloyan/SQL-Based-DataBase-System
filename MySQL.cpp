@@ -13,6 +13,7 @@ MySQL::MySQL(UserDB* user, TaskDB* task, ProjectDB* project)
     command["select"] = Command::SELECT;
     command["update"] = Command::UPDATE;
     command["delete"] = Command::DELETE;
+    command["modify"] = Command::MODIFY;
 
     // For DB files
     DB["user.data"] = DBFile::USER;
@@ -29,6 +30,7 @@ MySQL::MySQL(UserDB* user, TaskDB* task, ProjectDB* project)
     func_ht[Command::SELECT] = &MySQL::select;
     func_ht[Command::UPDATE] = &MySQL::update;
     func_ht[Command::DELETE] = &MySQL::delete_;
+    func_ht[Command::MODIFY] = &MySQL::modify;
 }
 
 // Main function to execute input
@@ -44,6 +46,11 @@ void MySQL::execute(const std::string& rhs)
     // Finding command
     auto command_name = std::find_if(pars.begin(), (file_name), [&](std::string& rhs) { return (command.find(lowercase(rhs)) != command.end()); });
     command_name = ((command_name == file_name) ? (throw std::invalid_argument("No such command!")) : (command_name));
+
+    if ((command[*command_name] == Command::MODIFY) && (DB[*file_name] != DBFile::PROJECT))
+    {
+        throw std::invalid_argument("Syntax error!");
+    }
 
     // Create vector for datas
     std::vector<std::string> vec_datas(file_name + 1, pars.end());
@@ -88,6 +95,13 @@ void MySQL::update(Connect* connect_ptr, std::vector<std::string>& datas)
 void MySQL::delete_(Connect* connect_ptr, std::vector<std::string>& datas)
 {
     connect_ptr->delete_(datas);
+}
+
+
+// Modify function implementation
+void MySQL::modify(Connect* connect_ptr, std::vector<std::string>& datas)
+{
+    connect_ptr->modify(datas);
 }
 
 

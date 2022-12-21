@@ -30,6 +30,8 @@ void ProjectDB::init()
     keyword_ht["where"] = Project_Keyword::WHERE;
     keyword_ht["set"] = Project_Keyword::SET;
     keyword_ht["all"] = Project_Keyword::ALL;
+    keyword_ht["add"] = Project_Keyword::ADD;
+    keyword_ht["delete"] = Project_Keyword::DELETE;
 
     this->set_all_false();
 }
@@ -515,6 +517,161 @@ void ProjectDB::update(std::vector<std::string>& rhs)
         if (!set_tmp.deadline.empty())
         {
             project_ID[it]->deadline = set_tmp.deadline;
+        }
+    }
+}
+
+
+// Modify function implementation
+void ProjectDB::modify(std::vector<std::string>& rhs)
+{
+    // Analizing input
+    std::string spliter = " =";
+    std::string to_parse = to_string(rhs);
+    auto parsed = parser(to_parse, spliter);
+
+    // Finding keywords' iterators
+    auto where_it = std::find_if(parsed.begin(), parsed.end(), [&](const std::string& rhs) { return keyword_ht[rhs] == Project_Keyword::WHERE; });
+    auto task_it = std::find_if(parsed.begin(), parsed.end(), [&](const std::string& rhs) { return keyword_ht[rhs] == Project_Keyword::TASK; });
+    auto add_it = std::find_if(parsed.begin(), parsed.end(), [&](const std::string& rhs) { return keyword_ht[rhs] == Project_Keyword::ADD; });
+    auto delete_it = std::find_if(parsed.begin(), parsed.end(), [&](const std::string& rhs) { return keyword_ht[rhs] == Project_Keyword::DELETE; });
+
+    if (where_it == parsed.end()) { throw std::invalid_argument("Invalid syntax!"); }
+    if ((add_it == parsed.end() && delete_it == parsed.end()) || (add_it != parsed.end() && delete_it != parsed.end()))
+    {
+        throw std::invalid_argument("Invalid syntax!");
+    }
+
+    Project project;
+
+    // Parsing after where keyword
+    std::string tmp;
+
+    for (auto it = where_it + 1; ((it < add_it) && (it < delete_it)); ++it)
+    {
+        tmp += *it + ' ';
+    }
+    auto to_analize_where = parser(tmp, "\"");
+    for (auto vec_it = to_analize_where.begin(); vec_it < to_analize_where.end(); vec_it += 2)
+    {
+        auto tmp = parser(*vec_it, " =,");
+        for (auto string_it = tmp.begin(); string_it < tmp.end(); ++string_it)
+        {
+            if (keyword_ht[*string_it] == Project_Keyword::USER)
+            {
+                while ((!static_cast<bool>((keyword_ht[*(string_it + 1)]))) && (string_it != tmp.end() - 2))
+                {
+                    if (!user->find_email(*(string_it + 1))) { throw std::invalid_argument("No such user!"); }
+                    project.user.push_back(*(string_it + 1));
+                    ++string_it;
+                }
+            }
+            project.name = (keyword_ht[*string_it] == Project_Keyword::NAME) ? *(vec_it + 1) : project.name;
+            project.deadline = (keyword_ht[*string_it] == Project_Keyword::DEADLINE) ? *(string_it + 1) : project.deadline;
+            project.description = (keyword_ht[*string_it] == Project_Keyword::DESCRIPTION) ? *(vec_it + 1) : project.description;
+        }
+    }
+
+    std::vector<std::size_t> ID_for_modification;
+
+    this->set_for_select(project);
+
+    for (auto& it : project_ID)
+    {
+        if (for_selection_unique(project, it.second))
+        {
+            ID_for_modification.push_back(it.first);
+        }
+    }
+    if (ID_for_modification.empty()) { throw std::invalid_argument("No such project!"); }
+
+    // Analize for task
+    std::string task_to_parse;
+
+    if (task_it != parsed.end())
+    {
+        for (auto it = task_it + 1; (it < parsed.end() - 1) && (!static_cast<bool>(keyword_ht[*it])); ++it)
+        {
+            task_to_parse += *(it);
+            while (!((*it).find('\"')))
+            {
+                task_to_parse += ' ' + *(it + 1);
+                ++it;
+            }
+            task_to_parse += ' ';
+        }
+    }
+
+    auto task_values = parser(task_to_parse, "\"");
+
+    // Do deletion
+    if (delete_it != parsed.end())
+    {
+        // Delete tasks
+        for (auto& it_task : task_values)
+        {
+            if (it_task.empty()) { break; }
+            if (it_task == " ") { continue; }
+            for (auto it : ID_for_modification)
+            {
+                project_ID[it]->task.erase(std::remove(project_ID[it]->task.begin(), project_ID[it]->task.end(), task->find_ID(it_task)), project_ID[it]->task.end());
+            }
+        }
+
+        // Delete users
+        for (auto string_it = delete_it + 1; string_it < parsed.end(); ++string_it)
+        {
+            if (keyword_ht[*string_it] == Project_Keyword::USER)
+            {
+                while ((!static_cast<bool>((keyword_ht[*(string_it + 1)]))) && (string_it != parsed.end() - 2))
+                {
+                    for (auto it : ID_for_modification)
+                    {
+                        project_ID[it]->user.erase(std::remove(project_ID[it]->user.begin(), project_ID[it]->user.end(), *(string_it + 1)), project_ID[it]->user.end());
+                    }
+                    ++string_it;
+                }
+            }
+        }
+    }
+
+    // Do addition
+    if (add_it != parsed.end())
+    {
+        // Add tasks
+        for (auto& it_task : task_values)
+        {
+            if (it_task.empty()) { break; }
+            if (it_task == " ") { continue; }
+            for (auto it : ID_for_modification)
+            {
+                for (auto& task_name : project_ID[it]->task)
+                {
+                    if (task_name == it) { throw std::invalid_argument("Invalid task name!"); }
+                }
+                project_ID[it]->task.push_back(task->find_ID(it_task));
+            }
+        }
+
+        // Add users
+        for (auto string_it = add_it + 1; string_it < parsed.end(); ++string_it)
+        {
+            if (keyword_ht[*string_it] == Project_Keyword::USER)
+            {
+                while ((!static_cast<bool>((keyword_ht[*(string_it + 1)]))) && (string_it != parsed.end() - 2))
+                {
+                    for (auto it : ID_for_modification)
+                    {
+                        if (!user->find_email(*(string_it + 1))) { throw std::invalid_argument("No such user!"); }
+                        for (auto& user_name : project_ID[it]->user)
+                        {
+                            if (user_name == *(string_it + 1)) { throw std::invalid_argument("Invalid user name!"); }
+                        }
+                        project_ID[it]->user.push_back(*(string_it + 1));
+                    }
+                    ++string_it;
+                }
+            }
         }
     }
 }

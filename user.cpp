@@ -524,6 +524,13 @@ void UserDB::delete_from_map(const std::vector<std::size_t>& deleted_ID)
 }
 
 
+// Inherited modify function
+void UserDB::modify(std::vector<std::string>&)
+{
+    throw std::invalid_argument("Syntax error!");
+}
+
+
 // Move user data to file
 void UserDB::to_file()
 {

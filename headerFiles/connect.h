@@ -35,6 +35,7 @@ public:
     virtual void select(std::vector<std::string>&) = 0;
     virtual void delete_(std::vector<std::string>&) = 0;
     virtual void update(std::vector<std::string>&) = 0;
+    virtual void modify(std::vector<std::string>&) = 0;
     virtual void to_file() = 0;
 
 public:

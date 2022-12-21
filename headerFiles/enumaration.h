@@ -12,7 +12,8 @@ enum class Command
     INSERT = 1,
     SELECT,
     DELETE,
-    UPDATE
+    UPDATE,
+    MODIFY
 };
 
 enum class DBFile
@@ -56,4 +57,6 @@ enum class Project_Keyword
     WHERE,
     SET,
     ALL,
+    ADD,
+    DELETE
 };
