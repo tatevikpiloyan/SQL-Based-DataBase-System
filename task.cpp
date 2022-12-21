@@ -586,5 +586,4 @@ TaskDB::~TaskDB()
         delete it.second;
     }
     task_ID.clear();
-<<<<<<< HEAD
 }
